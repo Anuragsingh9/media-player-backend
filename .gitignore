@@ -1,0 +1,3 @@
+/src/assets/uploads/*
+.env
+node_modules/
