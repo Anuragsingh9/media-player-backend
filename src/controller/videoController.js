@@ -11,6 +11,7 @@ function getVideoList(req, res) {
 }
 
 function playVideo(req, res) {
+    res.setHeader('Content-Type', 'video/mp4');
     const filename = req.params.filename;
     const range = req.headers.range;
     if (!range) {
