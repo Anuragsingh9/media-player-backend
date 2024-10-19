@@ -8,7 +8,7 @@ const videoRoutes = require('../src/routes/videoRoute');
 const corsOptions = {
     origin: 'https://media-player-frontend-beta.vercel.app', // Replace with your frontend URL
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true, // If you're dealing with cookies/sessions
+    // credentials: true, // If you're dealing with cookies/sessions
     allowedHeaders: ['Content-Type', 'Authorization'] // Customize as needed
 };
 
