@@ -9,7 +9,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // video routes
 app.use('/api',videoRoutes);
+const port = process.env.PORT || 8000;
 
-app.listen(8000, function () {
-    console.log("Listening on port 8000!");
+app.listen(port, function () {
+    console.log(`Listening on port !${port}`);
 });
