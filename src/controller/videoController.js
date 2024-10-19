@@ -9,7 +9,7 @@ function getVideoList(req, res) {
         return res.status(200).json({ success: true, data: result })
     });
 }
-
+ 
 function playVideo(req, res) {
     const filename = req.params.filename;
     const range = req.headers.range;
