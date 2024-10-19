@@ -11,7 +11,6 @@ function getVideoList(req, res) {
 }
 
 function playVideo(req, res) {
-    res.setHeader('Content-Type', 'video/mp4');
     const filename = req.params.filename;
     const range = req.headers.range;
     if (!range) {
@@ -28,6 +27,7 @@ function playVideo(req, res) {
         "Accept-Ranges": "bytes",
         "Content-Length": contentLength,
         "Content-Type": "video/mp4",
+        "Access-Control-Allow-Origin": "*", 
     };
     res.writeHead(206, headers);
     const videoStream = fs.createReadStream(videoPath, { start, end });
