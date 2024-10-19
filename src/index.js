@@ -4,16 +4,16 @@ const cors = require("cors");
 require('dotenv').config();
 const videoRoutes = require('../src/routes/videoRoute');
 
-// app.use(cors());
+app.use(cors());
 const url = process.env.FRONT_URL;
-const corsOptions = {
-    origin: `${url}`,
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-};
+// const corsOptions = {
+//     origin: `${url}`,
+//     methods: ['GET', 'POST', 'PUT', 'DELETE'],
+//     allowedHeaders: ['Content-Type', 'Authorization']
+// };
 
-app.use(cors(corsOptions));
-app.options('*', cors(corsOptions));
+// app.use(cors(corsOptions));
+// app.options('*', cors(corsOptions));
 app.use(express.urlencoded({ extended: true }));
 
 // video routes
