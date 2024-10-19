@@ -5,11 +5,11 @@ require('dotenv').config();
 const videoRoutes = require('../src/routes/videoRoute');
 
 // app.use(cors());
+const url = process.env.FRONT_URL;
 const corsOptions = {
-    origin: 'https://media-player-frontend-beta.vercel.app', // Replace with your frontend URL
+    origin: `${url}`,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    // credentials: true, // If you're dealing with cookies/sessions
-    allowedHeaders: ['Content-Type', 'Authorization'] // Customize as needed
+    allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
