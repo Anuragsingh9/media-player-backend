@@ -61,16 +61,13 @@ const upload = multer({ storage });
  * @param {*} res 
  */
 function uploadFile(req, res) {
-    if(!req.body.title){
-        res.status(400).json({error: "Please fill the title"});
-    }
     upload.single('file')(req, res, (err) => {
         if (err) {
             console.error('Upload error:', err);
             return res.status(500).json({ error: err.message });
         }
-        if(!req.body.title){
-            res.status(400).json({error: "Please fill the title"});
+        if (req.body.title == "null") {
+            return res.status(400).json({ error: "Please fill the title" });
         }
         // console.log(req.body.description);
         db.query("insert into media_uploads (filename,filepath,description,title) values (?,?,?,?)", [req.file.filename, "uploads", req.body.description, req.body.title], function (error, result) {
@@ -88,9 +85,9 @@ function addLikeDislike(req, res) {
             res.status(400).json({ error: error.message })
         }
         var type = null;
-        if(req.body.type == 'like'){
+        if (req.body.type == 'like') {
             type = 'like_count';
-        }else{
+        } else {
             type = 'dislike_count';
         }
         // const likeDislike = req.body.type;
