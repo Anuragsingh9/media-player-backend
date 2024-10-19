@@ -8,7 +8,11 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 
 // video routes
-app.use('/api',videoRoutes);
+app.use('/api', videoRoutes);
+
+app.get('/', (req, res) => {
+    res.send('Welcome to the backend!');
+});
 const port = process.env.PORT || 8000;
 
 app.listen(port, function () {
