@@ -73,9 +73,10 @@ function uploadFile(req, res) {
         // console.log(req.body.description);
         db.query("insert into media_uploads (filename,filepath,description,title) values (?,?,?,?)", [req.file.filename, "uploads", req.body.description, req.body.title], function (error, result) {
             if (error) {
+                return res.status(500).json({ error: err.message });
                 throw error;
             }
-            res.status(201).json({ message: "File uploaded successfully", data: req.file });
+            return res.status(201).json({ message: "File uploaded successfully", data: req.file });
         });
     });
 }
