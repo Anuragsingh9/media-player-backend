@@ -1,15 +1,22 @@
 const fs = require("fs");
 const path = require('path');
 const multer = require('multer');
+const cloudinary = require('cloudinary').v2;
 const db = require("../database/db-connection/dbConnection");
-const e = require("express");
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: process.env.CLOUDNARY_NAME,
+    api_key: process.env.CLOUDNARY_API_KEY,
+    api_secret: process.env.CLOUDNARY_API_SECRET
+});
 
 function getVideoList(req, res) {
-    const videoLists = db.query("select * from media_uploads", (error, result) => {
-        return res.status(200).json({ success: true, data: result })
+    db.query("select * from media_uploads", (error, result) => {
+        return res.status(200).json({ success: true, data: result });
     });
 }
- 
+
 function playVideo(req, res) {
     const filename = req.params.filename;
     const range = req.headers.range;
@@ -27,80 +34,66 @@ function playVideo(req, res) {
         "Accept-Ranges": "bytes",
         "Content-Length": contentLength,
         "Content-Type": "video/mp4",
-        "Access-Control-Allow-Origin": "*", 
+        "Access-Control-Allow-Origin": "*",
     };
     res.writeHead(206, headers);
     const videoStream = fs.createReadStream(videoPath, { start, end });
     videoStream.pipe(res);
 }
 
-function prepareUploadPath(pathToCreate) {
-    const uploadsPath = path.resolve(__dirname, pathToCreate);
-    if (!fs.existsSync(uploadsPath)) {
-        fs.mkdirSync(uploadsPath);
-    }
-    return uploadsPath;
-}
+const upload = multer({ dest: 'uploads/' }); // Temporary local storage
 
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, prepareUploadPath('../assets/uploads'));
-    },
-    filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now();
-        const ext = path.extname(file.originalname);
-        const baseName = path.basename(file.originalname, ext);
-        cb(null, baseName + '-' + uniqueSuffix + ext);
-    }
-});
-
-const upload = multer({ storage });
-
-/**
- * This funcion is responsible for uploading the files
- * @param {*} req 
- * @param {*} res 
- */
-function uploadFile(req, res) {
-    upload.single('file')(req, res, (err) => {
+async function uploadFile(req, res) {
+    upload.single('file')(req, res, async (err) => {
         if (err) {
             console.error('Upload error:', err);
             return res.status(500).json({ error: err.message });
         }
-        if (req.body.title == "null") {
+        if (req.body.title === "null") {
             return res.status(400).json({ error: "Please fill the title" });
         }
-        // console.log(req.body.description);
-        db.query("insert into media_uploads (filename,filepath,description,title) values (?,?,?,?)", [req.file.filename, "uploads", req.body.description, req.body.title], function (error, result) {
-            if (error) {
-                return res.status(500).json({ error: err.message });
-                throw error;
-            }
-            return res.status(201).json({ message: "File uploaded successfully", data: req.file });
-        });
+
+        try {
+            // Upload video to Cloudinary
+            const result = await cloudinary.uploader.upload(req.file.path, {
+                resource_type: 'video',
+                folder: 'media_player'  // Specify the folder name here
+            });
+
+            // Delete the temporary file after uploading
+            fs.unlinkSync(req.file.path);
+
+            // Save the Cloudinary URL and other metadata to the database
+            db.query(
+                "INSERT INTO media_uploads (filename, filepath, description, title) VALUES (?, ?, ?, ?)",
+                [result.public_id, result.secure_url, req.body.description, req.body.title],
+                function (error, dbResult) {
+                    if (error) throw error;
+                    res.status(201).json({ message: "File uploaded successfully", data: result });
+                }
+            );
+        } catch (uploadError) {
+            console.error('Cloudinary upload error:', uploadError);
+            res.status(500).json({ error: "Failed to upload video to Cloudinary", errorMessage: uploadError });
+        }
     });
 }
 
 function addLikeDislike(req, res) {
     upload.none()(req, res, (error) => {
         if (error) {
-            res.status(400).json({ error: error.message })
+            res.status(400).json({ error: error.message });
         }
-        var type = null;
-        if (req.body.type == 'like') {
-            type = 'like_count';
-        } else {
-            type = 'dislike_count';
-        }
-        // const likeDislike = req.body.type;
-        // console.log('likeDislikeee',req.body);
-        db.query(`update media_uploads set ${type} = ? where id = ?`, [req.body.count, req.body.video_id], function (error, result) {
-            if (error) {
-                throw error;
+        let type = req.body.type === 'like' ? 'like_count' : 'dislike_count';
+        db.query(
+            `UPDATE media_uploads SET ${type} = ? WHERE id = ?`,
+            [req.body.count, req.body.video_id],
+            function (error, result) {
+                if (error) throw error;
+                res.status(201).json({ message: "Updated like/dislike count successfully", data: req.body.count });
             }
-            res.status(201).json({ message: "Added one like to video successfully", data: req.body.count });
-        });
-    })
+        );
+    });
 }
 
 module.exports = { playVideo, getVideoList, uploadFile, addLikeDislike };
