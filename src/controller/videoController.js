@@ -41,7 +41,8 @@ function playVideo(req, res) {
     videoStream.pipe(res);
 }
 
-const upload = multer({ dest: 'uploads/' }); // Temporary local storage
+// Configure multer to use /tmp for temporary file storage (Vercel-compatible)
+const upload = multer({ dest: '/tmp' });
 
 async function uploadFile(req, res) {
     upload.single('file')(req, res, async (err) => {
@@ -54,7 +55,7 @@ async function uploadFile(req, res) {
         }
 
         try {
-            // Upload video to Cloudinary
+            // Upload video to Cloudinary from the /tmp directory
             const result = await cloudinary.uploader.upload(req.file.path, {
                 resource_type: 'video',
                 folder: 'media_player'  // Specify the folder name here
